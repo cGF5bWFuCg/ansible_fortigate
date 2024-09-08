@@ -1,0 +1,5 @@
+[fortigates]
+fortigate01 ansible_host=192.168.191.2 fortios_access_token=sr7qw11hcnry4qHtdn0y7Gt8y0tnQj
+
+[fortigates:vars]
+ansible_network_os=fortinet.fortios.fortios

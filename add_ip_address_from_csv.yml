@@ -1,0 +1,115 @@
+- hosts: fortigate01
+  connection: httpapi
+  collections:
+    - fortinet.fortios
+    - community.general
+
+  vars:
+    vdom: "root"
+    ansible_httpapi_use_ssl: true
+    ansible_httpapi_validate_certs: false
+    ansible_httpapi_port: 443
+    csv_file: "/home/payman/Downloads/ansible_fortinet_fortigate/ip_addresses.csv"  # Replace with the path to your CSV file
+
+  tasks:
+    - name: Read IP addresses from CSV file
+      community.general.read_csv:
+        path: "{{ csv_file }}"
+      register: ip_data
+
+    - name: Debug IP data
+      debug:
+        var: ip_data
+
+    - name: Configure IP Mask
+      fortinet.fortios.fortios_firewall_address:
+        vdom: "{{ vdom }}"
+        state: "present"
+        access_token: "{{ fortios_access_token }}"
+        firewall_address:
+          name: "{{ item.name }}"
+          subnet: "{{ item.subnet }}"
+          comment: "{{ item.comment }}"
+          type: ipmask
+      when: item.type == 'ipmask'
+      loop: "{{ ip_data.list }}"
+
+    - name: Configure IP Range
+      fortinet.fortios.fortios_firewall_address:
+        vdom: "{{ vdom }}"
+        state: "present"
+        access_token: "{{ fortios_access_token }}"
+        firewall_address:
+          name: "{{ item.name }}"
+          start_ip: "{{ item.start_ip }}"
+          end_ip: "{{ item.end_ip }}"
+          comment: "{{ item.comment }}"
+          type: iprange
+      when: item.type == 'iprange'
+      loop: "{{ ip_data.list }}"
+
+    - name: Configure FQDN
+      fortinet.fortios.fortios_firewall_address:
+        vdom: "{{ vdom }}"
+        state: "present"
+        access_token: "{{ fortios_access_token }}"
+        firewall_address:
+          name: "{{ item.name }}"
+          fqdn: "{{ item.fqdn }}"
+          comment: "{{ item.comment }}"
+          type: fqdn
+      when: item.type == 'fqdn'
+      loop: "{{ ip_data.list }}"
+
+    - name: Configure Wildcard
+      fortinet.fortios.fortios_firewall_address:
+        vdom: "{{ vdom }}"
+        state: "present"
+        access_token: "{{ fortios_access_token }}"
+        firewall_address:
+          name: "{{ item.name }}"
+          subnet: "{{ item.subnet }}"
+          comment: "{{ item.comment }}"
+          type: wildcard
+      when: item.type == 'wildcard'
+      loop: "{{ ip_data.list }}"
+
+    - name: Configure MAC Address
+      fortinet.fortios.fortios_firewall_address:
+        vdom: "{{ vdom }}"
+        state: "present"
+        access_token: "{{ fortios_access_token }}"
+        firewall_address:
+          name: "{{ item.name }}"
+          macaddr:
+            - macaddr: "{{ item.macaddr}}"
+          comment: "{{ item.comment }}"
+          type: mac
+      when: item.type == 'mac'
+      loop: "{{ ip_data.list }}"
+
+    - name: Import Geography
+      fortios_firewall_address:
+        vdom: "{{ vdom }}"
+        access_token: "{{ fortios_access_token }}"
+        state: present
+        firewall_address:
+          name: "{{ item.name }}"
+          country: "{{ item.country }}"
+          comment: "{{ item.comment }}"
+          type: geography
+      when: item.type == 'geography'
+      loop: "{{ ip_data.list }}"
+
+    - name: Configure Wildcard FQDN
+      fortinet.fortios.fortios_firewall_address:
+        vdom: "{{ vdom }}"
+        state: "present"
+        access_token: "{{ fortios_access_token }}"
+        firewall_address:
+          name: "{{ item.name }}"
+          fqdn: "{{ item.fqdn }}"
+          comment: "{{ item.comment }}"
+          type: wildcard-fqdn
+      when: item.type == 'wildcard-fqdn'
+      loop: "{{ ip_data.list }}"
